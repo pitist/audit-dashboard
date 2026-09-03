@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auditoría Android - Dashboard</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    h1 { color: #333; }
+    .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin: 10px 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+    .pass { color: #22c55e; font-weight: bold; }
+    .fail { color: #ef4444; font-weight: bold; }
+    .score-high { color: #22c55e; }
+    .score-medium { color: #f59e0b; }
+    .score-low { color: #ef4444; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>📊 Auditoría Android - Dashboard Global</h1>
+  <div class="card">
+    <p>Estado de todos los repositorios auditados.</p>
+    <div id="stats"></div>
+  </div>
+  <div class="card">
+    <table id="repos-table">
+      <thead><tr><th>Repositorio</th><th>Score</th><th>Errores</th><th>Estado</th></tr></thead>
+      <tbody id="repos-body"></tbody>
+    </table>
+  </div>
+</div>
+<script>
+  // Cargar datos desde el JSON generado por el agente
+  fetch('resultado_global.json')
+    .then(r => r.json())
+    .then(data => {
+      const body = document.getElementById('repos-body');
+      const stats = document.getElementById('stats');
+      let pass = 0, fail = 0, total = 0;
+      data.forEach(repo => {
+        total++;
+        if (repo.status === 'PASS') pass++;
+        else fail++;
+        const cls = repo.status === 'PASS' ? 'pass' : 'fail';
+        const scoreCls = repo.score >= 80 ? 'score-high' : repo.score >= 60 ? 'score-medium' : 'score-low';
+        body.innerHTML += `<tr><td>${repo.repo}</td><td class="${scoreCls}">${repo.score || 'N/A'}%</td><td>${repo.errors || 0}</td><td class="${cls}">${repo.status}</td></tr>`;
+      });
+      stats.innerHTML = `<p><strong>✅ PASAN:</strong> ${pass} | <strong>❌ FALLAN:</strong> ${fail} | <strong>📊 TOTAL:</strong> ${total}</p>`;
+    })
+    .catch(() => {
+      document.getElementById('repos-body').innerHTML = '<tr><td colspan="4">⚠️ No se pudieron cargar los datos. Ejecuta primero el agente auditor.</td></tr>';
+    });
+</script>
+</body>
+</html>
